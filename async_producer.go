@@ -129,6 +129,9 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 		Bus:         "kafka",
 		ShutdownCtx: context.Background(),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize dataqual: %w", err)
+	}
 	// End streamdal shim
 
 	p := &asyncProducer{
