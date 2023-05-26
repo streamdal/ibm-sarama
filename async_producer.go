@@ -471,13 +471,13 @@ func (p *asyncProducer) dispatcher() {
 
 			data, err := p.DataQual.ApplyRules(dataqual.Producer, msg.Topic, val)
 			if err != nil {
-				log.Println("Error applying dataqual rules")
+				log.Println("Error applying data quality rules")
 				p.returnError(msg, ErrUnknown)
 				continue
 			}
 
 			if data == nil {
-				log.Println("Message rejected by dataqual")
+				log.Println("Message dropped by data quality rules")
 				// Data will be nil when a message is to be rejected for publishing
 				p.returnError(msg, ErrInvalidMessage)
 				continue
