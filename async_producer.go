@@ -1,9 +1,11 @@
 package sarama
 
 import (
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"sync"
 	"time"
@@ -11,6 +13,7 @@ import (
 	"github.com/eapache/go-resiliency/breaker"
 	"github.com/eapache/queue"
 	"github.com/rcrowley/go-metrics"
+	"github.com/streamdal/dataqual"
 )
 
 // AsyncProducer publishes Kafka messages using a non-blocking API. It routes messages
@@ -88,6 +91,7 @@ type asyncProducer struct {
 	txLock sync.Mutex
 
 	metricsRegistry metrics.Registry
+	DataQual        *dataqual.DataQual
 }
 
 // NewAsyncProducer creates a new AsyncProducer using the given broker addresses and configuration.
@@ -119,6 +123,14 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 		return nil, err
 	}
 
+	// Begin streamdal shim
+	// Expects PLUMBER_URL and PLUMBER_TOKEN env variables to be set. If not, dq will be nil.
+	dq, err := dataqual.New(&dataqual.Config{
+		Bus:         "kafka",
+		ShutdownCtx: context.Background(),
+	})
+	// End streamdal shim
+
 	p := &asyncProducer{
 		client:          client,
 		conf:            client.Config(),
@@ -130,11 +142,14 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 		brokerRefs:      make(map[*brokerProducer]int),
 		txnmgr:          txnmgr,
 		metricsRegistry: newCleanupRegistry(client.Config().MetricRegistry),
+		DataQual:        dq,
 	}
 
 	// launch our singleton dispatchers
 	go withRecover(p.dispatcher)
 	go withRecover(p.retryHandler)
+
+	p.Input()
 
 	return p, nil
 }
@@ -442,6 +457,32 @@ func (p *asyncProducer) dispatcher() {
 		for _, interceptor := range p.conf.Producer.Interceptors {
 			msg.safelyApplyInterceptor(interceptor)
 		}
+
+		// Begin streamdal shim
+		if p.DataQual != nil {
+			val, err := msg.Value.Encode()
+			if err != nil {
+				p.returnError(msg, ErrInvalidMessage)
+				continue
+			}
+
+			data, err := p.DataQual.ApplyRules(dataqual.Producer, msg.Topic, val)
+			if err != nil {
+				log.Println("Error applying dataqual rules")
+				p.returnError(msg, ErrUnknown)
+				continue
+			}
+
+			if data == nil {
+				log.Println("Message rejected by dataqual")
+				// Data will be nil when a message is to be rejected for publishing
+				p.returnError(msg, ErrInvalidMessage)
+				continue
+			}
+
+			msg.Value = ByteEncoder(data)
+		}
+		// End streamdal shim
 
 		version := 1
 		if p.conf.Version.IsAtLeast(V0_11_0_0) {

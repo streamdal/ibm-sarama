@@ -1,6 +1,10 @@
 package sarama
 
-import "sync"
+import (
+	"github.com/streamdal/dataqual"
+	"log"
+	"sync"
+)
 
 // SyncProducer publishes Kafka messages, blocking until they have been acknowledged. It routes messages to the correct
 // broker, refreshing metadata as appropriate, and parses responses for errors. You must call Close() on a producer
@@ -125,6 +129,31 @@ func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
 	expectations := make(chan chan *ProducerError, len(msgs))
 	go func() {
 		for _, msg := range msgs {
+
+			// Begin streamdal shim
+			if sp.producer.DataQual != nil {
+				val, err := msg.Value.Encode()
+				if err != nil {
+					sp.producer.returnError(msg, ErrInvalidMessage)
+					continue
+				}
+
+				data, err := sp.producer.DataQual.ApplyRules(dataqual.Producer, msg.Topic, val)
+				if err != nil {
+					log.Println("Error applying dataqual rules")
+					continue
+				}
+
+				if data == nil {
+					log.Println("Message rejected by dataqual")
+					// Data will be nil when a message is to be rejected for publishing
+					continue
+				}
+
+				msg.Value = ByteEncoder(data)
+			}
+			// End streamdal shim
+
 			expectation := make(chan *ProducerError, 1)
 			msg.expectation = expectation
 			sp.producer.Input() <- msg
