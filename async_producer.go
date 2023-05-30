@@ -130,7 +130,7 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 		ShutdownCtx: context.Background(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize dataqual: %w", err)
+		return nil, fmt.Errorf("failed to initialize Streamdal data quality library: %s", err)
 	}
 	// End streamdal shim
 
