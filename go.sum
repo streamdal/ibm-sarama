@@ -47,8 +47,8 @@ github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/batchcorp/plumber-schemas v0.0.182-0.20230526153948-5d74c8fbc85b h1:yRKgn4zanyrHyjwpWsh2ZIbiupJ249Z14e32mEwieQI=
-github.com/batchcorp/plumber-schemas v0.0.182-0.20230526153948-5d74c8fbc85b/go.mod h1:8HkOEly65MKPTi49/lvhS5yn/jZaGuffgO5djTByJsY=
+github.com/batchcorp/plumber-schemas v0.0.182-0.20230531134746-180ce272862d h1:v4FGIjhs/OmpsPQelSyY7IsVRyVrORKt91Ki5fPd/ng=
+github.com/batchcorp/plumber-schemas v0.0.182-0.20230531134746-180ce272862d/go.mod h1:8HkOEly65MKPTi49/lvhS5yn/jZaGuffgO5djTByJsY=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
@@ -264,8 +264,8 @@ github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPx
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
-github.com/streamdal/dataqual v0.0.5 h1:pJP99fpyfQkUyE9MvUKrUHq8NJE3iXnrbhhQUhfXXMA=
-github.com/streamdal/dataqual v0.0.5/go.mod h1:JQ/vARMtkM4s9ePwedPW/+Bj9y/VxbhfT4jWcb86qk8=
+github.com/streamdal/dataqual v0.0.7 h1:Fgf5IRrMacHUT7putf4X2lQy5Pvc0okT7JCAYwzM9Z0=
+github.com/streamdal/dataqual v0.0.7/go.mod h1:yWN8d9iZ/aDBP6Zie68+5uJCsKwRtjMd6RU+QE4XG0s=
 github.com/streamdal/pii v0.0.3 h1:JmWatbLdWLqnW2EnJiFVico+wG93wKJcVwwBvFQfdSU=
 github.com/streamdal/pii v0.0.3/go.mod h1:8VCf2un/Db78rFA+PAR65uRTT9ZOD5inbySA1Xgy7Bc=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
