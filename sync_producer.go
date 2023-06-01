@@ -1,9 +1,10 @@
 package sarama
 
 import (
-	"github.com/streamdal/dataqual"
 	"log"
 	"sync"
+
+	"github.com/streamdal/dataqual"
 )
 
 // SyncProducer publishes Kafka messages, blocking until they have been acknowledged. It routes messages to the correct
@@ -138,7 +139,7 @@ func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
 					continue
 				}
 
-				data, err := sp.producer.DataQual.ApplyRules(dataqual.Producer, msg.Topic, val)
+				data, err := sp.producer.DataQual.ApplyRules(dataqual.Publish, msg.Topic, val)
 				if err != nil {
 					log.Println("Error applying dataqual rules")
 					continue

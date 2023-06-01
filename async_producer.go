@@ -13,6 +13,7 @@ import (
 	"github.com/eapache/go-resiliency/breaker"
 	"github.com/eapache/queue"
 	"github.com/rcrowley/go-metrics"
+
 	"github.com/streamdal/dataqual"
 )
 
@@ -469,7 +470,7 @@ func (p *asyncProducer) dispatcher() {
 				continue
 			}
 
-			data, err := p.DataQual.ApplyRules(dataqual.Producer, msg.Topic, val)
+			data, err := p.DataQual.ApplyRules(dataqual.Publish, msg.Topic, val)
 			if err != nil {
 				log.Println("Error applying data quality rules")
 				p.returnError(msg, ErrUnknown)
