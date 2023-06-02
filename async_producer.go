@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"sync"
 	"time"
@@ -472,15 +471,13 @@ func (p *asyncProducer) dispatcher() {
 
 			data, err := p.DataQual.ApplyRules(dataqual.Publish, msg.Topic, val)
 			if err != nil {
-				log.Println("Error applying data quality rules")
-				p.returnError(msg, ErrUnknown)
+				p.returnError(msg, errors.New("error applying data quality rules: "+err.Error()))
 				continue
 			}
 
 			if data == nil {
-				log.Println("Message dropped by data quality rules")
 				// Data will be nil when a message is to be rejected for publishing
-				p.returnError(msg, ErrInvalidMessage)
+				p.returnError(msg, errors.New("message dropped by data quality rules"))
 				continue
 			}
 
