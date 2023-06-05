@@ -1,4 +1,4 @@
-module github.com/streamdal/sarama
+module github.com/streamdal/shopify-sarama
 
 go 1.17
 
@@ -24,7 +24,7 @@ require (
 
 require (
 	github.com/CosmWasm/tinyjson v0.9.0 // indirect
-	github.com/batchcorp/plumber-schemas v0.0.182-0.20230531172638-d3eba529ba60 // indirect
+	github.com/batchcorp/plumber-schemas v0.0.182-0.20230605192444-9508bc70b790 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -55,7 +55,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-require github.com/streamdal/dataqual v0.0.11
+require github.com/streamdal/dataqual v0.0.14
 
 retract (
 	v1.32.0 // producer hangs on retry https://github.com/Shopify/sarama/issues/2150
