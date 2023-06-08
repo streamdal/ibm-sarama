@@ -1,6 +1,7 @@
 package sarama
 
 import (
+	"context"
 	"log"
 	"sync"
 
@@ -139,7 +140,7 @@ func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
 					continue
 				}
 
-				data, err := sp.producer.DataQual.ApplyRules(dataqual.Publish, msg.Topic, val)
+				data, err := sp.producer.DataQual.ApplyRules(context.Background(), dataqual.Publish, msg.Topic, val)
 				if err != nil {
 					log.Println("Error applying dataqual rules")
 					continue

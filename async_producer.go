@@ -469,7 +469,7 @@ func (p *asyncProducer) dispatcher() {
 				continue
 			}
 
-			data, err := p.DataQual.ApplyRules(dataqual.Publish, msg.Topic, val)
+			data, err := p.DataQual.ApplyRules(context.Background(), dataqual.Publish, msg.Topic, val)
 			if err != nil {
 				p.returnError(msg, errors.New("error applying data quality rules: "+err.Error()))
 				continue

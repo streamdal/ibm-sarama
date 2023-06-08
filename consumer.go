@@ -602,7 +602,7 @@ feederLoop:
 
 			// Begin streamdal shim
 			if child.DataQual != nil {
-				data, err := child.DataQual.ApplyRules(dataqual.Consume, msg.Topic, msg.Value)
+				data, err := child.DataQual.ApplyRules(context.Background(), dataqual.Consume, msg.Topic, msg.Value)
 				if err != nil {
 					child.errors <- &ConsumerError{
 						Err:       fmt.Errorf("error applying data quality rules: %s", err),
@@ -641,7 +641,7 @@ feederLoop:
 
 						// Begin streamdal shim
 						if child.DataQual != nil {
-							data, err := child.DataQual.ApplyRules(dataqual.Consume, msg.Topic, msg.Value)
+							data, err := child.DataQual.ApplyRules(context.Background(), dataqual.Consume, msg.Topic, msg.Value)
 							if err != nil {
 								child.errors <- &ConsumerError{
 									Err:       fmt.Errorf("error applying data quality rules: %s", err),
