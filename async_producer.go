@@ -473,7 +473,7 @@ func (p *asyncProducer) dispatcher() {
 			if err != nil {
 				if err == dataqual.ErrMessageDropped {
 					// Data will be nil when a message is to be rejected for publishing
-					p.returnError(msg, errors.New("message dropped by data quality rules"))
+					p.returnError(msg, dataqual.ErrMessageDropped)
 					continue
 				}
 				p.returnError(msg, errors.New("error applying data quality rules: "+err.Error()))
