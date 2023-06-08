@@ -142,13 +142,14 @@ func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
 
 				data, err := sp.producer.DataQual.ApplyRules(context.Background(), dataqual.Publish, msg.Topic, val)
 				if err != nil {
-					log.Println("Error applying dataqual rules")
-					continue
-				}
+					if err == dataqual.ErrMessageDropped {
+						// Data will be nil when a message is to be rejected for publishing
+						log.Println("Message rejected by dataqual")
+						// Data will be nil when a message is to be rejected for publishing
+						continue
+					}
 
-				if data == nil {
-					log.Println("Message rejected by dataqual")
-					// Data will be nil when a message is to be rejected for publishing
+					log.Println("Error applying dataqual rules")
 					continue
 				}
 

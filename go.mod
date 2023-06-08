@@ -57,7 +57,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-require github.com/streamdal/dataqual v0.0.17
+require github.com/streamdal/dataqual v0.0.18
 
 retract (
 	v1.32.0 // producer hangs on retry https://github.com/Shopify/sarama/issues/2150

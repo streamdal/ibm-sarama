@@ -604,17 +604,17 @@ feederLoop:
 			if child.DataQual != nil {
 				data, err := child.DataQual.ApplyRules(context.Background(), dataqual.Consume, msg.Topic, msg.Value)
 				if err != nil {
+					if err == dataqual.ErrMessageDropped {
+						child.errors <- &ConsumerError{
+							Err:       err,
+							Topic:     msg.Topic,
+							Partition: child.partition,
+						}
+						continue
+					}
+
 					child.errors <- &ConsumerError{
 						Err:       fmt.Errorf("error applying data quality rules: %s", err),
-						Topic:     msg.Topic,
-						Partition: child.partition,
-					}
-					continue
-				}
-
-				if data == nil {
-					child.errors <- &ConsumerError{
-						Err:       errors.New("message dropped by data quality rules"),
 						Topic:     msg.Topic,
 						Partition: child.partition,
 					}
@@ -643,17 +643,16 @@ feederLoop:
 						if child.DataQual != nil {
 							data, err := child.DataQual.ApplyRules(context.Background(), dataqual.Consume, msg.Topic, msg.Value)
 							if err != nil {
+								if err == dataqual.ErrMessageDropped {
+									child.errors <- &ConsumerError{
+										Err:       err,
+										Topic:     msg.Topic,
+										Partition: child.partition,
+									}
+									continue
+								}
 								child.errors <- &ConsumerError{
 									Err:       fmt.Errorf("error applying data quality rules: %s", err),
-									Topic:     msg.Topic,
-									Partition: child.partition,
-								}
-								continue
-							}
-
-							if data == nil {
-								child.errors <- &ConsumerError{
-									Err:       errors.New("message dropped by data quality rules"),
 									Topic:     msg.Topic,
 									Partition: child.partition,
 								}
