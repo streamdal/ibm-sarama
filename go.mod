@@ -18,17 +18,16 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/stretchr/testify v1.8.1
 	github.com/xdg-go/scram v1.1.2
-	golang.org/x/net v0.7.0
+	golang.org/x/net v0.11.0
 	golang.org/x/sync v0.1.0
 )
 
 require (
 	github.com/CosmWasm/tinyjson v0.9.0 // indirect
-	github.com/batchcorp/plumber-schemas v0.0.183-0.20230607212720-e58a068de32c // indirect
+	github.com/batchcorp/plumber-schemas v0.0.183-0.20230628144351-f5dc66655fbd // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
@@ -39,6 +38,7 @@ require (
 	github.com/magefile/mage v1.14.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/relistan/go-director v0.0.0-20200406104025-dbbf5d95248d // indirect
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/streamdal/pii v0.0.4-0.20230607185452-2896fc3a28a4 // indirect
 	github.com/tetratelabs/wazero v1.2.0 // indirect
@@ -48,16 +48,16 @@ require (
 	github.com/wasilibs/go-re2 v1.1.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/crypto v0.10.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/text v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	google.golang.org/grpc v1.40.0 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-require github.com/streamdal/dataqual v0.0.18
+require github.com/streamdal/snitch-go-client v0.0.23
 
 retract (
 	v1.32.0 // producer hangs on retry https://github.com/Shopify/sarama/issues/2150

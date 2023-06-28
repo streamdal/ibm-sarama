@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/streamdal/dataqual"
+	"github.com/streamdal/snitch-go-client"
 )
 
 // SyncProducer publishes Kafka messages, blocking until they have been acknowledged. It routes messages to the correct
@@ -133,23 +133,23 @@ func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
 		for _, msg := range msgs {
 
 			// Begin streamdal shim
-			if sp.producer.DataQual != nil {
+			if sp.producer.Snitch != nil {
 				val, err := msg.Value.Encode()
 				if err != nil {
 					sp.producer.returnError(msg, ErrInvalidMessage)
 					continue
 				}
 
-				data, err := sp.producer.DataQual.ApplyRules(context.Background(), dataqual.Publish, msg.Topic, val)
+				data, err := sp.producer.Snitch.ApplyRules(context.Background(), snitch.Publish, msg.Topic, val)
 				if err != nil {
-					if err == dataqual.ErrMessageDropped {
+					if err == snitch.ErrMessageDropped {
 						// Data will be nil when a message is to be rejected for publishing
-						log.Println("Message rejected by dataqual")
+						log.Println("Message rejected by Snitch")
 						// Data will be nil when a message is to be rejected for publishing
 						continue
 					}
 
-					log.Println("Error applying dataqual rules")
+					log.Println("Error applying Snitch rules")
 					continue
 				}
 

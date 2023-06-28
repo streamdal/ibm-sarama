@@ -11,7 +11,7 @@ import (
 
 	"github.com/rcrowley/go-metrics"
 
-	"github.com/streamdal/dataqual"
+	"github.com/streamdal/snitch-go-client"
 )
 
 // ConsumerMessage encapsulates a Kafka message returned by the consumer.
@@ -109,7 +109,7 @@ type consumer struct {
 	client          Client
 	metricRegistry  metrics.Registry
 	lock            sync.Mutex
-	DataQual        *dataqual.DataQual
+	Snitch          *snitch.Snitch
 }
 
 // NewConsumer creates a new consumer using the given broker addresses and configuration.
@@ -145,15 +145,15 @@ func newConsumer(client Client) (Consumer, error) {
 	}
 
 	// Begin streamdal shim
-	// Expects PLUMBER_URL and PLUMBER_TOKEN env variables to be set. If not, dq will be nil.
-	dq, err := dataqual.New(&dataqual.Config{
-		Bus:         "kafka",
+	// Expects PLUMBER_URL and PLUMBER_TOKEN env variables to be set. If not, sc will be nil.
+	sc, err := snitch.New(&snitch.Config{
+		DataSource:  "kafka",
 		ShutdownCtx: context.Background(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize Streamdal data quality library: %s", err)
+		return nil, fmt.Errorf("failed to initialize Streamdal Snitch library: %s", err)
 	}
-	c.DataQual = dq
+	c.Snitch = sc
 	// End streamdal shim
 
 	return c, nil
@@ -186,7 +186,7 @@ func (c *consumer) ConsumePartition(topic string, partition int32, offset int64)
 		trigger:              make(chan none, 1),
 		dying:                make(chan none),
 		fetchSize:            c.conf.Consumer.Fetch.Default,
-		DataQual:             c.DataQual,
+		Snitch:               c.Snitch,
 	}
 
 	if err := child.chooseStartingOffset(offset); err != nil {
@@ -432,7 +432,7 @@ type partitionConsumer struct {
 
 	paused int32
 
-	DataQual *dataqual.DataQual
+	Snitch *snitch.Snitch
 }
 
 var errTimedOut = errors.New("timed out feeding messages to the user") // not user-facing
@@ -601,10 +601,10 @@ feederLoop:
 			child.interceptors(msg)
 
 			// Begin streamdal shim
-			if child.DataQual != nil {
-				data, err := child.DataQual.ApplyRules(context.Background(), dataqual.Consume, msg.Topic, msg.Value)
+			if child.Snitch != nil {
+				data, err := child.Snitch.ApplyRules(context.Background(), snitch.Consume, msg.Topic, msg.Value)
 				if err != nil {
-					if err == dataqual.ErrMessageDropped {
+					if err == snitch.ErrMessageDropped {
 						child.errors <- &ConsumerError{
 							Err:       err,
 							Topic:     msg.Topic,
@@ -614,7 +614,7 @@ feederLoop:
 					}
 
 					child.errors <- &ConsumerError{
-						Err:       fmt.Errorf("error applying data quality rules: %s", err),
+						Err:       fmt.Errorf("error applying Snitch rules: %s", err),
 						Topic:     msg.Topic,
 						Partition: child.partition,
 					}
@@ -640,10 +640,10 @@ feederLoop:
 						child.interceptors(msg)
 
 						// Begin streamdal shim
-						if child.DataQual != nil {
-							data, err := child.DataQual.ApplyRules(context.Background(), dataqual.Consume, msg.Topic, msg.Value)
+						if child.Snitch != nil {
+							data, err := child.Snitch.ApplyRules(context.Background(), snitch.Consume, msg.Topic, msg.Value)
 							if err != nil {
-								if err == dataqual.ErrMessageDropped {
+								if err == snitch.ErrMessageDropped {
 									child.errors <- &ConsumerError{
 										Err:       err,
 										Topic:     msg.Topic,
@@ -652,7 +652,7 @@ feederLoop:
 									continue
 								}
 								child.errors <- &ConsumerError{
-									Err:       fmt.Errorf("error applying data quality rules: %s", err),
+									Err:       fmt.Errorf("error applying Snitch rules: %s", err),
 									Topic:     msg.Topic,
 									Partition: child.partition,
 								}

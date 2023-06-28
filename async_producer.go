@@ -13,7 +13,7 @@ import (
 	"github.com/eapache/queue"
 	"github.com/rcrowley/go-metrics"
 
-	"github.com/streamdal/dataqual"
+	"github.com/streamdal/snitch-go-client"
 )
 
 // AsyncProducer publishes Kafka messages using a non-blocking API. It routes messages
@@ -91,7 +91,7 @@ type asyncProducer struct {
 	txLock sync.Mutex
 
 	metricsRegistry metrics.Registry
-	DataQual        *dataqual.DataQual
+	Snitch          *snitch.Snitch
 }
 
 // NewAsyncProducer creates a new AsyncProducer using the given broker addresses and configuration.
@@ -124,13 +124,13 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 	}
 
 	// Begin streamdal shim
-	// Expects PLUMBER_URL and PLUMBER_TOKEN env variables to be set. If not, dq will be nil.
-	dq, err := dataqual.New(&dataqual.Config{
-		Bus:         "kafka",
+	// Expects PLUMBER_URL and PLUMBER_TOKEN env variables to be set. If not, sc will be nil.
+	sc, err := snitch.New(&snitch.Config{
+		DataSource:  "kafka",
 		ShutdownCtx: context.Background(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize Streamdal data quality library: %s", err)
+		return nil, fmt.Errorf("failed to initialize Streamdal Snitch library: %s", err)
 	}
 	// End streamdal shim
 
@@ -145,7 +145,7 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 		brokerRefs:      make(map[*brokerProducer]int),
 		txnmgr:          txnmgr,
 		metricsRegistry: newCleanupRegistry(client.Config().MetricRegistry),
-		DataQual:        dq,
+		Snitch:          sc,
 	}
 
 	// launch our singleton dispatchers
@@ -462,21 +462,21 @@ func (p *asyncProducer) dispatcher() {
 		}
 
 		// Begin streamdal shim
-		if p.DataQual != nil {
+		if p.Snitch != nil {
 			val, err := msg.Value.Encode()
 			if err != nil {
 				p.returnError(msg, ErrInvalidMessage)
 				continue
 			}
 
-			data, err := p.DataQual.ApplyRules(context.Background(), dataqual.Publish, msg.Topic, val)
+			data, err := p.Snitch.ApplyRules(context.Background(), snitch.Publish, msg.Topic, val)
 			if err != nil {
-				if err == dataqual.ErrMessageDropped {
+				if err == snitch.ErrMessageDropped {
 					// Data will be nil when a message is to be rejected for publishing
-					p.returnError(msg, dataqual.ErrMessageDropped)
+					p.returnError(msg, snitch.ErrMessageDropped)
 					continue
 				}
-				p.returnError(msg, errors.New("error applying data quality rules: "+err.Error()))
+				p.returnError(msg, errors.New("error applying Snitch rules: "+err.Error()))
 				continue
 			}
 
