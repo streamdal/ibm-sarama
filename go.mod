@@ -24,7 +24,7 @@ require (
 
 require (
 	github.com/CosmWasm/tinyjson v0.9.0 // indirect
-	github.com/batchcorp/plumber-schemas v0.0.183-0.20230628144351-f5dc66655fbd // indirect
+	github.com/batchcorp/plumber-schemas v0.0.183-0.20230629182645-ba59891412a6 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -57,7 +57,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-require github.com/streamdal/snitch-go-client v0.0.23
+require github.com/streamdal/snitch-go-client v0.0.27
 
 retract (
 	v1.32.0 // producer hangs on retry https://github.com/Shopify/sarama/issues/2150
