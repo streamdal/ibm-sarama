@@ -466,7 +466,7 @@ func (p *asyncProducer) dispatcher() {
 			})
 
 			if err != nil {
-				p.returnError(msg, fmt.Errorf("error applying streamdal rules: "+err.Error()))
+				p.returnError(msg, fmt.Errorf("error applying streamdal rules: %s", err.Error()))
 				continue
 			}
 
