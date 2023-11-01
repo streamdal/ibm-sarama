@@ -636,7 +636,6 @@ feederLoop:
 				}
 
 				msg.Value = resp.Data
-
 			}
 			// End streamdal shim
 
@@ -691,7 +690,6 @@ feederLoop:
 							}
 
 							msg.Value = resp.Data
-
 						}
 						// End streamdal shim
 
