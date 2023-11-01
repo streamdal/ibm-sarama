@@ -1,4 +1,4 @@
-module github.com/streamdal/shopify-sarama
+module github.com/streamdal/ibm-sarama
 
 go 1.17
 
