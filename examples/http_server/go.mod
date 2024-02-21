@@ -1,11 +1,8 @@
-module github.com/IBM/sarama/examples/txn_producer
+module github.com/IBM/sarama/examples/http_server
 
 go 1.19
 
-require (
-	github.com/IBM/sarama v1.42.2
-	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
-)
+require github.com/IBM/sarama v1.42.2
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -23,6 +20,7 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 )
