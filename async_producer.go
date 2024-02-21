@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	streamdal "github.com/streamdal/go-sdk"
+	streamdal "github.com/streamdal/streamdal/sdks/go"
 
 	"github.com/eapache/go-resiliency/breaker"
 	"github.com/eapache/queue"
@@ -460,23 +460,13 @@ func (p *asyncProducer) dispatcher() {
 
 		// Begin streamdal shim
 		if p.Streamdal != nil {
-			resp, err := p.Streamdal.Process(context.Background(), &streamdal.ProcessRequest{
+			resp := p.Streamdal.Process(context.Background(), &streamdal.ProcessRequest{
 				ComponentName: "kafka",
 				OperationType: streamdal.OperationTypeProducer,
 			})
 
-			if err != nil {
-				p.returnError(msg, fmt.Errorf("error applying streamdal rules: %s", err.Error()))
-				continue
-			}
-
-			if resp.Data == nil {
-				p.returnError(msg, errors.New("message dropped due to streamdal rules"))
-				continue
-			}
-
-			if resp.Error {
-				p.returnError(msg, fmt.Errorf("failed to run streamdal rule: %s", resp.Message))
+			if resp.Status == streamdal.ExecStatusError {
+				p.returnError(msg, fmt.Errorf("error applying streamdal rules: %s", *resp.StatusMessage))
 				continue
 			}
 

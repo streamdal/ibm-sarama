@@ -11,7 +11,7 @@ import (
 
 	"github.com/rcrowley/go-metrics"
 
-	streamdal "github.com/streamdal/go-sdk"
+	streamdal "github.com/streamdal/streamdal/sdks/go"
 )
 
 // ConsumerMessage encapsulates a Kafka message returned by the consumer.
@@ -602,35 +602,17 @@ feederLoop:
 
 			// Begin streamdal shim
 			if child.streamdal != nil {
-				resp, err := child.streamdal.Process(context.Background(), &streamdal.ProcessRequest{
+				resp := child.streamdal.Process(context.Background(), &streamdal.ProcessRequest{
 					ComponentName: "kafka",
 					OperationType: streamdal.OperationTypeConsumer,
 					OperationName: msg.Topic,
 				})
 
-				if err != nil {
+				if resp.Status == streamdal.ExecStatusError {
 					child.errors <- &ConsumerError{
 						Topic:     msg.Topic,
 						Partition: msg.Partition,
-						Err:       fmt.Errorf("error applying streamdal rules: %s", err.Error()),
-					}
-					continue
-				}
-
-				if resp.Data == nil {
-					child.errors <- &ConsumerError{
-						Topic:     msg.Topic,
-						Partition: msg.Partition,
-						Err:       errors.New("message dropped due to streamdal rules"),
-					}
-					continue
-				}
-
-				if resp.Error {
-					child.errors <- &ConsumerError{
-						Topic:     msg.Topic,
-						Partition: msg.Partition,
-						Err:       fmt.Errorf("failed to run streamdal rule: %s", resp.Message),
+						Err:       fmt.Errorf("error applying streamdal rules: %s", *resp.StatusMessage),
 					}
 					continue
 				}
@@ -656,35 +638,17 @@ feederLoop:
 
 						// Begin streamdal shim
 						if child.streamdal != nil {
-							resp, err := child.streamdal.Process(context.Background(), &streamdal.ProcessRequest{
+							resp := child.streamdal.Process(context.Background(), &streamdal.ProcessRequest{
 								ComponentName: "kafka",
 								OperationType: streamdal.OperationTypeConsumer,
 								OperationName: msg.Topic,
 							})
 
-							if err != nil {
+							if resp.Status == streamdal.ExecStatusError {
 								child.errors <- &ConsumerError{
 									Topic:     msg.Topic,
 									Partition: msg.Partition,
-									Err:       fmt.Errorf("error applying streamdal rules: %s", err.Error()),
-								}
-								continue
-							}
-
-							if resp.Data == nil {
-								child.errors <- &ConsumerError{
-									Topic:     msg.Topic,
-									Partition: msg.Partition,
-									Err:       errors.New("message dropped due to streamdal rules"),
-								}
-								continue
-							}
-
-							if resp.Error {
-								child.errors <- &ConsumerError{
-									Topic:     msg.Topic,
-									Partition: msg.Partition,
-									Err:       fmt.Errorf("failed to run streamdal rule: %s", resp.Message),
+									Err:       fmt.Errorf("error applying streamdal rules: %s", *resp.StatusMessage),
 								}
 								continue
 							}
