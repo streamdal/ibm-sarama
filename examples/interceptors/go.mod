@@ -1,9 +1,9 @@
-module github.com/IBM/sarama/examples/interceptors
+module github.com/streamdal/ibm-sarama/examples/interceptors
 
 go 1.19
 
 require (
-	github.com/IBM/sarama v1.42.2
+	github.com/streamdal/ibm-sarama v1.42.2
 	go.opentelemetry.io/otel v1.23.1
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.23.1
 	go.opentelemetry.io/otel/sdk v1.23.1
@@ -26,7 +26,7 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	go.opentelemetry.io/otel/metric v1.23.1 // indirect
@@ -36,4 +36,4 @@ require (
 	golang.org/x/sys v0.17.0 // indirect
 )
 
-replace github.com/IBM/sarama => ../../
+replace github.com/streamdal/ibm-sarama => ../../

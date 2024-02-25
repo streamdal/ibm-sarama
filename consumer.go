@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/rcrowley/go-metrics"
+
+	streamdal "github.com/streamdal/streamdal/sdks/go"
 )
 
 // ConsumerMessage encapsulates a Kafka message returned by the consumer.
@@ -106,6 +108,8 @@ type consumer struct {
 	client          Client
 	metricRegistry  metrics.Registry
 	lock            sync.Mutex
+
+	streamdal *streamdal.Streamdal // streamdal addition
 }
 
 // NewConsumer creates a new consumer using the given broker addresses and configuration.
@@ -140,6 +144,17 @@ func newConsumer(client Client) (Consumer, error) {
 		metricRegistry:  newCleanupRegistry(client.Config().MetricRegistry),
 	}
 
+	// Streamdal shim BEGIN
+	if client.Config().EnableStreamdal {
+		sc, err := streamdalSetup()
+		if err != nil {
+			return nil, fmt.Errorf("unable to create streamdal client for consumer: %s", err)
+		}
+
+		c.streamdal = sc
+	}
+	// Streamdal shim END
+
 	return c, nil
 }
 
@@ -170,6 +185,7 @@ func (c *consumer) ConsumePartition(topic string, partition int32, offset int64)
 		trigger:              make(chan none, 1),
 		dying:                make(chan none),
 		fetchSize:            c.conf.Consumer.Fetch.Default,
+		streamdal:            c.streamdal, // streamdal addition
 	}
 
 	if err := child.chooseStartingOffset(offset); err != nil {
@@ -414,6 +430,8 @@ type partitionConsumer struct {
 	retries        int32
 
 	paused int32
+
+	streamdal *streamdal.Streamdal // Streamdal addition
 }
 
 var errTimedOut = errors.New("timed out feeding messages to the user") // not user-facing
@@ -580,6 +598,25 @@ feederLoop:
 
 		for i, msg := range msgs {
 			child.interceptors(msg)
+
+			// Streamdal shim BEGIN
+			if child.streamdal != nil {
+				var scErr error
+
+				// TODO: Figure out a non-intrusive way to pass StreamdalRuntimeConfig
+				msg, scErr = streamdalProcessForConsumer(child.streamdal, msg, nil)
+				if scErr != nil {
+					child.errors <- &ConsumerError{
+						Topic:     msg.Topic,
+						Partition: msg.Partition,
+						Err:       fmt.Errorf("streamdal error: %s", scErr),
+					}
+
+					continue
+				}
+			}
+			// Streamdal shim END
+
 		messageSelect:
 			select {
 			case <-child.dying:
@@ -594,6 +631,25 @@ feederLoop:
 				remainingLoop:
 					for _, msg = range msgs[i:] {
 						child.interceptors(msg)
+
+						// Begin streamdal shim
+						if child.streamdal != nil {
+							var scErr error
+
+							// TODO: Figure out a non-intrusive way to pass StreamdalRuntimeConfig
+							msg, scErr = streamdalProcessForConsumer(child.streamdal, msg, nil)
+							if scErr != nil {
+								child.errors <- &ConsumerError{
+									Topic:     msg.Topic,
+									Partition: msg.Partition,
+									Err:       fmt.Errorf("streamdal error: %s", scErr),
+								}
+
+								continue
+							}
+						}
+						// End streamdal shim
+
 						select {
 						case child.messages <- msg:
 						case <-child.dying:

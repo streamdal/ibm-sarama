@@ -500,6 +500,9 @@ type Config struct {
 	// prior to starting Sarama.
 	// See Examples on how to use the metrics registry
 	MetricRegistry metrics.Registry
+
+	// Turn Streamdal integration on/off
+	EnableStreamdal bool
 }
 
 // NewConfig returns a new configuration instance with sane defaults.

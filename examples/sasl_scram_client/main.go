@@ -8,8 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-
-	"github.com/IBM/sarama"
 )
 
 func init() {

@@ -121,6 +121,9 @@ type Client interface {
 
 	// Closed returns true if the client has already had Close called on it
 	Closed() bool
+
+	//// EnableStreamdal returns true if config has been configured
+	//EnableStreamdal() bool
 }
 
 const (

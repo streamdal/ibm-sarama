@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	streamdal "github.com/streamdal/streamdal/sdks/go"
+
 	"github.com/eapache/go-resiliency/breaker"
 	"github.com/eapache/queue"
 	"github.com/rcrowley/go-metrics"
@@ -87,6 +89,8 @@ type asyncProducer struct {
 	txLock sync.Mutex
 
 	metricsRegistry metrics.Registry
+
+	Streamdal *streamdal.Streamdal // Streamdal addition
 }
 
 // NewAsyncProducer creates a new AsyncProducer using the given broker addresses and configuration.
@@ -130,6 +134,17 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 		txnmgr:          txnmgr,
 		metricsRegistry: newCleanupRegistry(client.Config().MetricRegistry),
 	}
+
+	// Streamdal shim BEGIN
+	if client.Config().EnableStreamdal {
+		sc, scErr := streamdalSetup()
+		if scErr != nil {
+			return nil, fmt.Errorf("unable to setup streamdal for producer: %s", err)
+		}
+
+		p.Streamdal = sc
+	}
+	// Streamdal shim END
 
 	// launch our singleton dispatchers
 	go withRecover(p.dispatcher)
@@ -190,6 +205,9 @@ type ProducerMessage struct {
 	// by the broker. This is only guaranteed to be defined if the message was
 	// successfully delivered and RequiredAcks is not NoResponse.
 	Timestamp time.Time
+
+	// StreamdalRuntimeConfig is used for changing the behavior of the Streamdal shim
+	StreamdalRuntimeConfig *StreamdalRuntimeConfig
 
 	retries        int
 	flags          flagSet
@@ -441,6 +459,18 @@ func (p *asyncProducer) dispatcher() {
 		for _, interceptor := range p.conf.Producer.Interceptors {
 			msg.safelyApplyInterceptor(interceptor)
 		}
+
+		// Streamdal shim BEGIN
+		if p.Streamdal != nil {
+			var scErr error
+
+			msg, scErr = streamdalProcessForProducer(p.Streamdal, msg)
+			if scErr != nil {
+				p.returnError(msg, fmt.Errorf("streamdal error: %s", scErr))
+				continue
+			}
+		}
+		// Streamdal shim END
 
 		version := 1
 		if p.conf.Version.IsAtLeast(V0_11_0_0) {

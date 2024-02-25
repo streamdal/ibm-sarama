@@ -1,8 +1,9 @@
-module github.com/IBM/sarama
+module github.com/streamdal/ibm-sarama
 
 go 1.19
 
 require (
+	github.com/IBM/sarama v1.41.3
 	github.com/davecgh/go-spew v1.1.1
 	github.com/eapache/go-resiliency v1.5.0
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3
@@ -19,17 +20,31 @@ require (
 	golang.org/x/sync v0.6.0
 )
 
+require github.com/streamdal/streamdal/sdks/go v0.1.9
+
 require (
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/relistan/go-director v0.0.0-20200406104025-dbbf5d95248d // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/streamdal/streamdal/libs/protos v0.1.25 // indirect
+	github.com/tetratelabs/wazero v1.6.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/time v0.5.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240116215550-a9fa1716bcac // indirect
+	google.golang.org/grpc v1.60.1 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

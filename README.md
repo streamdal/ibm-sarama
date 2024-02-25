@@ -4,6 +4,11 @@
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/IBM/sarama/badge?style=flat)](https://securityscorecards.dev/viewer/?uri=github.com/IBM/sarama)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/7996/badge)](https://www.bestpractices.dev/projects/7996)
 
+> [!IMPORTANT]
+> This library is instrumented with [Streamdal's Go SDK](https://github.com/streamdal/streamdal/tree/main/sdks/go).
+>
+> Refer to [README.STREAMDAL.md](README.STREAMDAL.md) for more information.
+
 Sarama is an MIT-licensed Go client library for [Apache Kafka](https://kafka.apache.org/).
 
 ## Getting started
