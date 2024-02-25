@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -13,11 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	_ "net/http/pprof"
-
 	"github.com/rcrowley/go-metrics"
-
-	"github.com/IBM/sarama"
 )
 
 // Sarama configuration options

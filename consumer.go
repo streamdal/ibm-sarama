@@ -1,7 +1,6 @@
 package sarama
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -137,24 +136,24 @@ func newConsumer(client Client) (Consumer, error) {
 		return nil, ErrClosedClient
 	}
 
-	// Begin streamdal shim
-	sd, err := streamdal.New(&streamdal.Config{
-		ShutdownCtx: context.Background(),
-		ClientType:  streamdal.ClientTypeShim,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create streamdal client: %s", err.Error())
-	}
-	// End streamdal shim
-
 	c := &consumer{
 		client:          client,
 		conf:            client.Config(),
 		children:        make(map[string]map[int32]*partitionConsumer),
 		brokerConsumers: make(map[*Broker]*brokerConsumer),
 		metricRegistry:  newCleanupRegistry(client.Config().MetricRegistry),
-		streamdal:       sd, // Streamdal addition
 	}
+
+	// Streamdal shim BEGIN
+	if client.Config().EnableStreamdal {
+		sc, err := streamdalSetup()
+		if err != nil {
+			return nil, fmt.Errorf("unable to create streamdal client for consumer: %s", err)
+		}
+
+		c.streamdal = sc
+	}
+	// Streamdal shim END
 
 	return c, nil
 }
@@ -600,26 +599,23 @@ feederLoop:
 		for i, msg := range msgs {
 			child.interceptors(msg)
 
-			// Begin streamdal shim
+			// Streamdal shim BEGIN
 			if child.streamdal != nil {
-				resp := child.streamdal.Process(context.Background(), &streamdal.ProcessRequest{
-					ComponentName: "kafka",
-					OperationType: streamdal.OperationTypeConsumer,
-					OperationName: msg.Topic,
-				})
+				var scErr error
 
-				if resp.Status == streamdal.ExecStatusError {
+				// TODO: Figure out a non-intrusive way to pass StreamdalRuntimeConfig
+				msg, scErr = streamdalProcessForConsumer(child.streamdal, msg, nil)
+				if scErr != nil {
 					child.errors <- &ConsumerError{
 						Topic:     msg.Topic,
 						Partition: msg.Partition,
-						Err:       fmt.Errorf("error applying streamdal rules: %s", *resp.StatusMessage),
+						Err:       fmt.Errorf("streamdal error: %s", scErr),
 					}
+
 					continue
 				}
-
-				msg.Value = resp.Data
 			}
-			// End streamdal shim
+			// Streamdal shim END
 
 		messageSelect:
 			select {
@@ -638,22 +634,19 @@ feederLoop:
 
 						// Begin streamdal shim
 						if child.streamdal != nil {
-							resp := child.streamdal.Process(context.Background(), &streamdal.ProcessRequest{
-								ComponentName: "kafka",
-								OperationType: streamdal.OperationTypeConsumer,
-								OperationName: msg.Topic,
-							})
+							var scErr error
 
-							if resp.Status == streamdal.ExecStatusError {
+							// TODO: Figure out a non-intrusive way to pass StreamdalRuntimeConfig
+							msg, scErr = streamdalProcessForConsumer(child.streamdal, msg, nil)
+							if scErr != nil {
 								child.errors <- &ConsumerError{
 									Topic:     msg.Topic,
 									Partition: msg.Partition,
-									Err:       fmt.Errorf("error applying streamdal rules: %s", *resp.StatusMessage),
+									Err:       fmt.Errorf("streamdal error: %s", scErr),
 								}
+
 								continue
 							}
-
-							msg.Value = resp.Data
 						}
 						// End streamdal shim
 

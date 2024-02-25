@@ -1,7 +1,6 @@
 package sarama
 
 import (
-	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -123,16 +122,6 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 		return nil, err
 	}
 
-	// Begin streamdal shim
-	sd, err := streamdal.New(&streamdal.Config{
-		ShutdownCtx: context.Background(),
-		ClientType:  streamdal.ClientTypeShim,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create streamdal client: %s", err.Error())
-	}
-	// End streamdal shim
-
 	p := &asyncProducer{
 		client:          client,
 		conf:            client.Config(),
@@ -144,8 +133,18 @@ func newAsyncProducer(client Client) (AsyncProducer, error) {
 		brokerRefs:      make(map[*brokerProducer]int),
 		txnmgr:          txnmgr,
 		metricsRegistry: newCleanupRegistry(client.Config().MetricRegistry),
-		Streamdal:       sd, // streamdal addition
 	}
+
+	// Streamdal shim BEGIN
+	if client.Config().EnableStreamdal {
+		sc, scErr := streamdalSetup()
+		if scErr != nil {
+			return nil, fmt.Errorf("unable to setup streamdal for producer: %s", err)
+		}
+
+		p.Streamdal = sc
+	}
+	// Streamdal shim END
 
 	// launch our singleton dispatchers
 	go withRecover(p.dispatcher)
@@ -206,6 +205,9 @@ type ProducerMessage struct {
 	// by the broker. This is only guaranteed to be defined if the message was
 	// successfully delivered and RequiredAcks is not NoResponse.
 	Timestamp time.Time
+
+	// StreamdalRuntimeConfig is used for changing the behavior of the Streamdal shim
+	StreamdalRuntimeConfig *StreamdalRuntimeConfig
 
 	retries        int
 	flags          flagSet
@@ -458,21 +460,17 @@ func (p *asyncProducer) dispatcher() {
 			msg.safelyApplyInterceptor(interceptor)
 		}
 
-		// Begin streamdal shim
+		// Streamdal shim BEGIN
 		if p.Streamdal != nil {
-			resp := p.Streamdal.Process(context.Background(), &streamdal.ProcessRequest{
-				ComponentName: "kafka",
-				OperationType: streamdal.OperationTypeProducer,
-			})
+			var scErr error
 
-			if resp.Status == streamdal.ExecStatusError {
-				p.returnError(msg, fmt.Errorf("error applying streamdal rules: %s", *resp.StatusMessage))
+			msg, scErr = streamdalProcessForProducer(p.Streamdal, msg)
+			if scErr != nil {
+				p.returnError(msg, fmt.Errorf("streamdal error: %s", scErr))
 				continue
 			}
-
-			msg.Value = ByteEncoder(resp.Data)
 		}
-		// End streamdal shim
+		// Streamdal shim END
 
 		version := 1
 		if p.conf.Version.IsAtLeast(V0_11_0_0) {

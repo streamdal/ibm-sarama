@@ -1,8 +1,8 @@
-module github.com/IBM/sarama/examples/exactly_once
+module github.com/streamdal/ibm-sarama/examples/exactly_once
 
 go 1.19
 
-require github.com/IBM/sarama v1.42.2
+require github.com/streamdal/ibm-sarama v1.42.2
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -25,4 +25,4 @@ require (
 	golang.org/x/net v0.21.0 // indirect
 )
 
-replace github.com/IBM/sarama => ../../
+replace github.com/streamdal/ibm-sarama => ../../
