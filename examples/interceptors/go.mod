@@ -3,7 +3,7 @@ module github.com/streamdal/ibm-sarama/examples/interceptors
 go 1.19
 
 require (
-	github.com/streamdal/ibm-sarama v1.42.2
+	github.com/streamdal/ibm-sarama v1.42.2-streamdal1
 	go.opentelemetry.io/otel v1.23.1
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.23.1
 	go.opentelemetry.io/otel/sdk v1.23.1

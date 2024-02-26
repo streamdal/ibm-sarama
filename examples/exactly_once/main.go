@@ -13,6 +13,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	sarama "github.com/streamdal/ibm-sarama"
 )
 
 // Sarama configuration options

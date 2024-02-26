@@ -2,7 +2,7 @@ module github.com/streamdal/ibm-sarama/examples/http_server
 
 go 1.19
 
-require github.com/streamdal/ibm-sarama v1.42.2
+require github.com/streamdal/ibm-sarama v1.42.2-streamdal1
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

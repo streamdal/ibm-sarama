@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+
+	sarama "github.com/streamdal/ibm-sarama"
 )
 
 func init() {

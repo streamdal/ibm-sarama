@@ -3,7 +3,7 @@ module github.com/streamdal/ibm-sarama/examples/txn_producer
 go 1.19
 
 require (
-	github.com/streamdal/ibm-sarama v1.42.2
+	github.com/streamdal/ibm-sarama v1.42.2-streamdal1
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 )
 

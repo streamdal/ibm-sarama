@@ -3,7 +3,7 @@ module github.com/streamdal/ibm-sarama/examples/sasl_scram_client
 go 1.19
 
 require (
-	github.com/streamdal/ibm-sarama v1.42.2
+	github.com/streamdal/ibm-sarama v1.42.2-streamdal1
 	github.com/xdg-go/scram v1.1.2
 )
 

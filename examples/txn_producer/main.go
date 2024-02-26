@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/rcrowley/go-metrics"
+
+	sarama "github.com/streamdal/ibm-sarama"
 )
 
 // Sarama configuration options

@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	sarama "github.com/streamdal/ibm-sarama"
 )
 
 var (

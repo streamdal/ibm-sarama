@@ -11,6 +11,8 @@ import (
 	"time"
 
 	stdout "go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
+
+	sarama "github.com/streamdal/ibm-sarama"
 )
 
 var (
