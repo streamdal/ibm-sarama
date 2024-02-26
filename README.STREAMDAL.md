@@ -37,14 +37,14 @@ To run the example:
     STREAMDAL_ADDRESS=localhost:8082 \
     STREAMDAL_AUTH_TOKEN=1234 \
     STREAMDAL_SERVICE_NAME=kafkacat \
-    go run go-kafkacat-streamdal.go --broker localhost consume --group testgroup test
+    go run go-kafkacat-streamdal.go --broker localhost:9092 consume --group testgroup test
     ```
 1. In another terminal, launch a producer:
     ```
     STREAMDAL_ADDRESS=localhost:8082 \
     STREAMDAL_AUTH_TOKEN=1234 \
     STREAMDAL_SERVICE_NAME=kafkacat \
-    go run go-kafkacat-streamdal.go produce --broker localhost --topic test --key-delim=":"
+    go run go-kafkacat-streamdal.go produce --broker localhost:9092 --topic test --key-delim=":"
     ```
 1. In the `producer` terminal, produce some data by pasting: `testKey:{"email":"foo@bar.com"}`
 1. In the `consumer` terminal, you should see: `{"email":"foo@bar.com"}`
@@ -68,16 +68,22 @@ it will swallow the errors and return the original value.
 When producing, you can set `StreamdalRuntimeConfig` in the `ProducerMessage`:
 
 ```go
+p, _ := kafka.NewAsyncProducer(brokers, config)
+
 msg := &ProducerMessage{
-	    Topic: "test",
+    Topic: "test",
     Value: []byte("hello, world"),
     StreamdalRuntimeConfig: &StreamdalRuntimeConfig{
-        ComponentName: "kafka",
-        OperationName: "produce",
+        ComponentName: "custom-component-name",
+        OperationName: "custom-operation-name",
     },
 }
 
-// And then pass the msg to the producer.Input() channel as usual
+p.Input() <- msg
+
+// This will cause the producer to show up in Streamdal Console with the
+// OperationName "custom-operation-name" and it will show as connected to
+// "custom-component-name" (instead of the default "kafka").
 ```
 
 **Passing `StreamdalRuntimeConfig` in the consumer is not implemented yet!**
@@ -88,8 +94,8 @@ The goal of any shim is to make minimally invasive changes so that the original
 library remains backwards-compatible and does not present any "surprises" at
 runtime.
 
-<sub>NOTE: `IBM/sarama` is significantly more complex than other Go Kafka libraries,
-so the integration is a bit more invasive than other shims.</sub>
+<sub>NOTE: `IBM/sarama` is significantly more complex than other Go Kafka libraries, 
+due to this, integration is a bit more invasive than other shims.</sub>
 
 The following changes have been made to the original library:
 
@@ -104,4 +110,3 @@ The following changes have been made to the original library:
 1. A new file [./streamdal.go](./streamdal.go) has been added to the library that
    contains helper funcs, structs and vars used for simplifying Streamdal
    instrumentation in the core library.
-

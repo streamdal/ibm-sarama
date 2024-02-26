@@ -17,7 +17,7 @@
 /**
  * This is a modified & slimmed-down version of the go-kafkacat-streamdal
  * example from the Confluent Kafka Go client library that has been modified to
- * use Streamdal.
+ * work with ibm-sarama library that is instrumented with Streamdal.
  *
  * See https://github.com/streamdal/confluent-kafka-go/blob/master/examples/go-kafkacat-streamdal/go-kafkacat-streamdal.go
  */
@@ -30,13 +30,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 
 	"github.com/alecthomas/kingpin"
-	kafka "github.com/streamdal/segmentio-kafka-go"
+	kafka "github.com/streamdal/ibm-sarama"
 	streamdal "github.com/streamdal/streamdal/sdks/go"
 )
 
@@ -48,15 +49,15 @@ var (
 	streamdalStrictErrors  bool
 )
 
-func runWriter(config *kafka.WriterConfig, topic string, partition int) {
+func runProducer(config *kafka.Config, brokers []string, topic string, partition int32) {
 	// Create a producer that has Streamdal enabled
-	w := kafka.NewWriter(*config)
-	if w == nil {
-		fmt.Fprint(os.Stderr, ">> Failed to create writer\n")
+	p, err := kafka.NewAsyncProducer(brokers, config)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, ">> Failed to create producer: %s\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(os.Stderr, ">> Created Writer, topic %s [partition %d]\n", topic, partition)
+	fmt.Fprintf(os.Stderr, ">> Created Producer, topic %s [partition %d]\n", topic, partition)
 
 	if streamdalComponentName != kafka.StreamdalDefaultComponentName || streamdalOperationName != kafka.StreamdalDefaultOperationName || streamdalStrictErrors {
 		fmt.Fprintf(os.Stderr, ">> Streamdal runtime-config enabled: component=%s, operation=%s, strict-errors=%v\n", streamdalComponentName, streamdalOperationName, streamdalStrictErrors)
@@ -97,7 +98,7 @@ func runWriter(config *kafka.WriterConfig, topic string, partition int) {
 				break
 			}
 
-			msg := kafka.Message{
+			msg := &kafka.ProducerMessage{
 				Topic:     topic,
 				Partition: partition,
 			}
@@ -106,50 +107,40 @@ func runWriter(config *kafka.WriterConfig, topic string, partition int) {
 			if keyDelim != "" {
 				vec := strings.SplitN(line, keyDelim, 2)
 				if len(vec[0]) > 0 {
-					msg.Key = ([]byte)(vec[0])
+					msg.Key = kafka.ByteEncoder(vec[0])
 				}
 				if len(vec) == 2 && len(vec[1]) > 0 {
-					msg.Value = ([]byte)(vec[1])
+					msg.Value = kafka.ByteEncoder(vec[1])
 				}
 			} else {
-				msg.Value = ([]byte)(line)
+				msg.Value = kafka.ByteEncoder(line)
 			}
 
-			// Inject Streamdal runtime-config into the context IF component name, operation or strict-errors are set
-			ctx := injectRuntimeConfig(context.Background(), streamdalComponentName, streamdalOperationName, streamdalStrictErrors)
+			// Inject Streamdal runtime-config into the msg (if provided)
+			injectRuntimeConfig(msg, streamdalComponentName, streamdalOperationName, streamdalStrictErrors)
 
-			if err := w.WriteMessages(ctx, msg); err != nil {
-				fmt.Fprintf(os.Stderr, ">> Produce error: %v\n", err)
-			}
+			// Write message to producer
+			p.Input() <- msg
 		}
 	}
 
 	fmt.Fprintf(os.Stderr, ">> Closing\n")
-	w.Close()
+	p.Close()
 }
 
-func runReader(config *kafka.ReaderConfig) {
-	topics := config.Topic
-
-	if len(config.GroupTopics) > 0 {
-		topics = fmt.Sprintf("%+v", config.GroupTopics)
-	}
-
-	// Create a consumer that has Streamdal enabled
-	r := kafka.NewReader(*config)
-	if r == nil {
-		fmt.Fprint(os.Stderr, "Failed to create reader\n")
+func runReader(config *kafka.Config, brokers []string, groupID string, topics []string) {
+	cg, err := kafka.NewConsumerGroup(brokers, groupID, config)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, ">> Failed to create consumer group: %s\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(os.Stderr, ">> Created Reader for topic(s) %+v, using last-offset\n", topics)
-
-	if streamdalComponentName != kafka.StreamdalDefaultComponentName || streamdalOperationName != kafka.StreamdalDefaultOperationName || streamdalStrictErrors {
-		fmt.Fprintf(os.Stderr, ">> Streamdal runtime-config enabled: component=%s, operation=%s, strict-errors=%v\n", streamdalComponentName, streamdalOperationName, streamdalStrictErrors)
-	}
+	fmt.Fprintf(os.Stderr, ">> Created Consumer (w/ groupID %s) for topic(s) %+v, using OffsetNewest\n", groupID, topics)
 
 	run := true
 	ctx, cancel := context.WithCancel(context.Background())
+
+	consumer := Consumer{}
 
 	// Watch for termination signal
 	go func() {
@@ -160,12 +151,8 @@ func runReader(config *kafka.ReaderConfig) {
 	}()
 
 	for run == true {
-		// Inject Streamdal runtime-config into the context IF component name, operation or strict-errors are set
-		ctx = injectRuntimeConfig(ctx, streamdalComponentName, streamdalOperationName, streamdalStrictErrors)
-
-		// ReadMessage auto-commits offsets
-		msg, err := r.ReadMessage(ctx)
-		if err != nil {
+		// Consume handler will auto-commits offsets
+		if err := cg.Consume(ctx, topics, &consumer); err != nil {
 			if errors.Is(err, context.Canceled) {
 				fmt.Fprint(os.Stderr, ">> Detected interrupt, exiting consumer\n")
 				run = false
@@ -175,15 +162,13 @@ func runReader(config *kafka.ReaderConfig) {
 			fmt.Fprintf(os.Stderr, ">> Fetch error: %v\n", err)
 			continue
 		}
-
-		fmt.Printf("%s\n", msg.Value)
 	}
 
 	fmt.Fprintf(os.Stderr, ">> Closing consumer\n")
-	r.Close()
+	cg.Close()
 }
 
-func injectRuntimeConfig(ctx context.Context, cn, on string, se bool) context.Context {
+func injectRuntimeConfig(msg *kafka.ProducerMessage, cn, on string, se bool) {
 	if cn != kafka.StreamdalDefaultComponentName || on != kafka.StreamdalDefaultOperationName || se {
 		src := &kafka.StreamdalRuntimeConfig{
 			Audience: &streamdal.Audience{},
@@ -201,10 +186,47 @@ func injectRuntimeConfig(ctx context.Context, cn, on string, se bool) context.Co
 			src.StrictErrors = true
 		}
 
-		ctx = context.WithValue(ctx, kafka.StreamdalContextValueKey, src)
+		msg.StreamdalRuntimeConfig = src
 	}
+}
 
-	return ctx
+// Consumer represents a Sarama consumer group consumer
+type Consumer struct{}
+
+// Setup is run at the beginning of a new session, before ConsumeClaim
+func (consumer *Consumer) Setup(kafka.ConsumerGroupSession) error {
+	return nil
+}
+
+// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
+func (consumer *Consumer) Cleanup(kafka.ConsumerGroupSession) error {
+	return nil
+}
+
+// ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
+// Once the Messages() channel is closed, the Handler must finish its processing
+// loop and exit.
+func (consumer *Consumer) ConsumeClaim(session kafka.ConsumerGroupSession, claim kafka.ConsumerGroupClaim) error {
+	// NOTE:
+	// Do not move the code below to a goroutine.
+	// The `ConsumeClaim` itself is called within a goroutine, see:
+	// https://github.com/IBM/sarama/blob/main/consumer_group.go#L27-L29
+	for {
+		select {
+		case message, ok := <-claim.Messages():
+			if !ok {
+				log.Printf("message channel was closed")
+				return nil
+			}
+			log.Printf("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
+			session.MarkMessage(message, "")
+		// Should return when `session.Context()` is done.
+		// If not, will raise `ErrRebalanceInProgress` or `read tcp <ip>:<port>: i/o timeout` when kafka rebalance. see:
+		// https://github.com/IBM/sarama/issues/1192
+		case <-session.Context().Done():
+			return nil
+		}
+	}
 }
 
 func main() {
@@ -221,7 +243,7 @@ func main() {
 	/* Producer mode options */
 	modeP := kingpin.Command("produce", "Produce messages")
 	topic := modeP.Flag("topic", "Topic to produce to").Required().String()
-	partition := modeP.Flag("partition", "Partition to produce to").Default("-1").Int()
+	partition := modeP.Flag("partition", "Partition to produce to").Default("-1").Int32()
 
 	/* Consumer mode options */
 	modeC := kingpin.Command("consume", "Consume messages").Default()
@@ -230,29 +252,20 @@ func main() {
 
 	mode := kingpin.Parse()
 	keyDelim = *keyDelimArg
+	splitBrokers := strings.Split(*brokers, ",")
 
 	switch mode {
 	case "produce":
-		wc := &kafka.WriterConfig{
-			Brokers:         []string{*brokers},
-			EnableStreamdal: true,
-		}
+		cfg := kafka.NewConfig()
+		cfg.EnableStreamdal = true
 
-		runWriter(wc, *topic, *partition)
+		runProducer(cfg, splitBrokers, *topic, *partition)
 
 	case "consume":
-		rc := &kafka.ReaderConfig{
-			Brokers:         []string{*brokers},
-			Partition:       *partition,
-			StartOffset:     kafka.LastOffset,
-			EnableStreamdal: true,
-		}
+		cfg := kafka.NewConfig()
+		cfg.EnableStreamdal = true
+		cfg.Consumer.Offsets.Initial = kafka.OffsetNewest
 
-		if *group != "" && *topics != nil {
-			rc.GroupTopics = *topics
-			rc.GroupID = *group
-		}
-
-		runReader(rc)
+		runReader(cfg, splitBrokers, *group, *topics)
 	}
 }
