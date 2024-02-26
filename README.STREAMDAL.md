@@ -1,4 +1,4 @@
-Confluent's Golang Client for Apache Kafka<sup>TM</sup> (instrumented with Streamdal)
+IBM's Sarama Golang Client for Apache Kafka<sup>TM</sup> (instrumented with Streamdal)
 =====================================================================================
 
 This library has been instrumented with [Streamdal's Go SDK](https://github.com/streamdal/streamdal/tree/main/sdks/go).
