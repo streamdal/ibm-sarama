@@ -25,8 +25,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/relistan/go-director v0.0.0-20200406104025-dbbf5d95248d // indirect
-	github.com/streamdal/streamdal/libs/protos v0.1.25 // indirect
-	github.com/streamdal/streamdal/sdks/go v0.1.9 // indirect
+	github.com/streamdal/streamdal/libs/protos v0.1.45 // indirect
+	github.com/streamdal/streamdal/sdks/go v0.1.20 // indirect
 	github.com/tetratelabs/wazero v1.6.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/net v0.21.0 // indirect

@@ -3,7 +3,6 @@ module github.com/streamdal/ibm-sarama
 go 1.19
 
 require (
-	github.com/IBM/sarama v1.41.3
 	github.com/davecgh/go-spew v1.1.1
 	github.com/eapache/go-resiliency v1.5.0
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3
@@ -20,7 +19,7 @@ require (
 	golang.org/x/sync v0.6.0
 )
 
-require github.com/streamdal/streamdal/sdks/go v0.1.9
+require github.com/streamdal/streamdal/sdks/go v0.1.20
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -31,12 +30,12 @@ require (
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/kr/text v0.2.0 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/relistan/go-director v0.0.0-20200406104025-dbbf5d95248d // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	github.com/streamdal/streamdal/libs/protos v0.1.25 // indirect
+	github.com/streamdal/streamdal/libs/protos v0.1.45 // indirect
 	github.com/tetratelabs/wazero v1.6.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
